@@ -1,15 +1,18 @@
 [submodule "taksa-app-traceability"]
 	path = taksa-app-traceability
 	url = git@github.com:artpark-hub/taksa-app-traceability.git
+	branch = release/0.0.x
 [submodule "taksa-benthos-umh"]
 	path = taksa-benthos-umh
 	url = git@github.com:artpark-hub/taksa-benthos-umh.git
 [submodule "taksa-build"]
 	path = taksa-build
 	url = git@github.com:artpark-hub/taksa-build.git
+	branch = release/0.0.x
 [submodule "taksa-deployments"]
 	path = taksa-deployments
 	url = git@github.com:artpark-hub/taksa-deployments.git
+	branch = release/0.0.x
 [submodule "taksa-edge-umh"]
 	path = taksa-edge-umh
 	url = git@github.com:artpark-hub/taksa-edge-umh.git
@@ -19,9 +22,12 @@
 [submodule "taksa-platform-dm"]
 	path = taksa-platform-dm
 	url = git@github.com:artpark-hub/taksa-platform-dm.git
+	branch = release/0.0.x
 [submodule "taksa-platform-services"]
 	path = taksa-platform-services
 	url = git@github.com:artpark-hub/taksa-platform-services.git
+	branch = release/0.0.x
 [submodule "taksa-ui"]
 	path = taksa-ui
 	url = git@github.com:artpark-hub/taksa-ui.git
+	branch = release/0.0.x
