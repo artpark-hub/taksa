@@ -53,7 +53,7 @@ Initialize and update all submodules associated with the Taksa ecosystem by runn
 ./bootstrap.sh
 ```
 
-This ensures that all connected repositories (UI, backend services, deployments, etc.) are pulled to their currently specified branches/commits.
+This updates all connected repositories (UI, backend services, deployments, etc.) to the latest commits on their configured remote tracking branches.
 
 ### 3. Build the Stack
 
