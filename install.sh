@@ -3,7 +3,7 @@
 # Script to initialize and update all submodules
 echo "Initializing and updating submodules for Taksa..."
 
-git submodule update --init --recursive
+git submodule update --init --recursive --remote
 
 if [ $? -eq 0 ]; then
     echo "Successfully updated all submodules."
