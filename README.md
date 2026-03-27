@@ -70,7 +70,7 @@ The environment variables (`GOROOT`, `GOPATH`, `PATH`) are now handled directly 
 
 **Build All Components:**
 ```bash
-make build
+make build-all
 ```
 
 **Build Individual Submodules:**

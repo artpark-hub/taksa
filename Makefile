@@ -21,21 +21,14 @@ export PATH := $(GOROOT)/bin:$(GOPATH)/bin:$(PATH)
 
 .PHONY: all help init-repo setup build clean \
 	build-ui build-traceability build-services build-edge build-dm build-benthos \
-	platform-init platform-up platform-down install-git-hooks shellcmd
+	platform-init platform-up platform-down
 
 all: build
-
-shellcmd: ## Run a command in the build environment. Usage: make shellcmd <command>
-	@$(filter-out $@,$(MAKECMDGOALS))
-
-# This allows passing arguments to shellcmd without make complaining about unknown targets
-%:
-	@:
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-init-repo: install-git-hooks ## Initialize and update all submodules
+init-repo: ## Initialize and update all submodules
 	@echo "Initializing and updating submodules for branch $(BRANCH)..."
 	git submodule update --init --recursive
 	git submodule foreach 'git checkout $(BRANCH) || git checkout -b $(BRANCH) origin/$(BRANCH) || echo "Failed to checkout $(BRANCH) in $$name"'
@@ -52,13 +45,7 @@ setup: ## Create dev setup with GOPATH/GOROOT in $(BUILD_DIR)
 	fi
 	@echo "Dev setup complete."
 
-install-git-hooks: ## Install git hooks and configure submodule push check                                                        
-	@echo "Installing git hooks..."
-	@git config --global push.recurseSubmodules check
-	go install github.com/evilmartians/lefthook@latest
-	lefthook install
-
-build: ## Build all repositories to create docker images
+build-all: ## Build all repositories to create docker images
 	@echo "Building all repositories..."
 	@for repo in $(REPOS_DIR)/*; do \
 		if [ -f $$repo/Makefile ]; then \
