@@ -1,6 +1,6 @@
 # Taksa Factory OS
 
-**Taksa** is an open source factory OS designed to build dashboards and features for the modern manufacturing environment. It serves as a comprehensive **Digital Foundation for manufacturing factory**, offering:
+**Taksa** is an open-source factory OS designed to build dashboards and features for the modern manufacturing environment. It serves as a comprehensive **Digital Foundation for the manufacturing factory**, offering:
 
 - IoT data capture from PLCs / machines
 - MES / MES-lite for production & traceability
@@ -9,104 +9,112 @@
 - Energy monitoring
 - Role-based reporting (Plant Head to Operator)
 
-This is the meta repository for the Taksa project, managing all related services and components as Git submodules.
+This is the meta-repository for the Taksa project, managing all related services and components as Git submodules.
+
+## Project Structure
+
+- `repos/`: Contains all Taksa submodules.
+- `build/`: Local, isolated Go toolchain and build artifacts (generated via `make setup`).
+- `scripts/`: Build and utility scripts.
+- `services/`: Core service definitions and shared logic.
+- `Makefile`: Centralized orchestration for the entire stack.
+- `VERSION`: Defines the target branch, version, and Docker registry/label for all components.
 
 ## Submodule Repositories
 
-| Repository | Description |
-| :--- | :--- |
-| [taksa-app-traceability](taksa-app-traceability) | MES Traceability application for tracking manufacturing units throughout their lifecycle. |
-| [taksa-benthos-umh](taksa-benthos-umh) | High-throughput streaming engine and data flow components based on Benthos. |
-| [taksa-build](taksa-build) | Open source Factory OS build system. |
-| [taksa-deployments](taksa-deployments) | Deployment scripts for Taksa platform and edge components. |
-| [taksa-edge-umh](taksa-edge-umh) | United Manufacturing Hub edge solution for ingesting and contextualizing factory data. |
-| [taksa-kratos-layout](taksa-kratos-layout) | Project template based on the Kratos Go framework. |
-| [taksa-platform-dm](taksa-platform-dm) | Platform Data Management service. |
-| [taksa-platform-services](taksa-platform-services) | Core platform services for the Taksa ecosystem. |
-| [taksa-ui](taksa-ui) | User Interface files and container for the Taksa platform. |
+| Repository | Path | Description |
+| :--- | :--- | :--- |
+| [taksa-app-traceability](repos/taksa-app-traceability) | `repos/taksa-app-traceability` | MES Traceability application. |
+| [taksa-benthos-umh](repos/taksa-benthos-umh) | `repos/taksa-benthos-umh` | Streaming engine and data flow components. |
+| [taksa-deployments](repos/taksa-deployments) | `repos/taksa-deployments` | Deployment scripts for Platform and Edge. |
+| [taksa-edge-umh](repos/taksa-edge-umh) | `repos/taksa-edge-umh` | UMH edge solution for factory data ingestion. |
+| [taksa-platform-dm](repos/taksa-platform-dm) | `repos/taksa-platform-dm` | Platform Data Management service. |
+| [taksa-platform-services](repos/taksa-platform-services) | `repos/taksa-platform-services` | Core platform services. |
+| [taksa-ui](repos/taksa-ui) | `repos/taksa-ui` | User Interface and dashboard. |
 
 ## Prerequisites
 
 Ensure you have the following installed on your system:
 - Git
-- Docker & Docker Compose
+- Docker & Docker Compose (v2 recommended)
 - Make
+- Curl (for environment setup)
 
-## Getting Started: Bootstrap, Build, and Orchestrate
-
-Follow these steps to set up the Taksa stack on your local environment.
+## Getting Started
 
 ### 1. Clone the Repository
-
-Clone the meta repository directly:
 
 ```bash
 git clone git@github.com:artpark-hub/taksa.git
 cd taksa
 ```
 
-### 2. Bootstrap Submodules
+### 2. Initialize Submodules & Hooks
 
-Initialize and update all submodules associated with the Taksa ecosystem by running the bootstrap script:
+This command initializes all submodules, configures local Git settings (to prevent unpushed submodule commits), and installs `lefthook` for pre-push validation.
 
 ```bash
-./bootstrap.sh
+make init-repo
 ```
 
-This updates all connected repositories (UI, backend services, deployments, etc.) to the latest commits on their configured remote tracking branches.
+### 3. Setup Development Environment
 
-### 3. Build the Stack
-
-We provide a dedicated `taksa-build` repository to manage all build steps.
+Download a local Go toolchain and configure the build environment (isolated to the `build/` directory):
 
 ```bash
-cd taksa-build
+make setup
 ```
+The environment variables (`GOROOT`, `GOPATH`, `PATH`) are now handled directly within the `Makefile`, eliminating the need to source external `.env` files.
 
-You can view all available build targets by running:
+### 4. Build the Stack
+
+**Build All Components:**
 ```bash
-make help
-```
-
-To build all Taksa components (or specific ones like the UI), use the Make targets:
-```bash
-# To build a specific service, e.g., the UI:
-make build-ui
-
-# To build all repositories, run:
 make build-all
-
-# Return to root directory once finished
-cd ..
 ```
 
-### 4. Deploy and Orchestrate
+**Build Individual Submodules:**
+You can build specific parts of the stack to save time:
+- `make build-ui`
+- `make build-traceability`
+- `make build-services`
+- `make build-edge`
+- `make build-dm`
+- `make build-benthos`
 
-Orchestration is handled via Docker Compose in the `taksa-deployments` repository. 
+### 5. Running Commands in Build Environment
 
-Navigate to the platform docker-compose directory:
+Use the `shellcmd` target to run arbitrary commands (like `go install` or `go version`) using the internal Taksa toolchain instead of your system's global environment:
 
 ```bash
-cd taksa-deployments/platform/docker-compose
+make shellcmd go version
+make shellcmd go install github.com/some/tool@latest
 ```
 
-**Initialize the Setup:**
+### 6. Deploy the Platform
 
-The `make init` command will set up the required directories (for databases, Grafana, NATS, etc.) and generate local SSL certificates (e.g., for `localcontroller.taksa-os.manufacturing`). It might ask for user confirmation.
-
+**Initialize Platform Configuration:**
+Sets up data directories and generates local SSL certificates.
 ```bash
-make init
+make platform-init
 ```
 
 **Start the Platform:**
-
-Spin up the entire stack in the background including HAProxy API Gateway, PostgreSQL, TimescaleDB, Kratos, Oathkeeper, Grafana, NATS, and the UI:
-
+Spins up the entire stack (PostgreSQL, TimescaleDB, Grafana, NATS, UI, etc.) in the background.
 ```bash
-make up
+make platform-up
 ```
 
-You can verify that your containers are running via:
-```bash
-docker ps
-```
+## Management Targets
+
+- `make platform-down`: Stop and remove the platform stack.
+- `make clean`: Prune unused Docker images and volumes.
+- `make help`: List all available targets with descriptions.
+
+## Versioning & Docker Registry
+
+All Docker images are tagged using values defined in the `VERSION` file:
+- `DOCKER_REGISTRY`: The destination registry (default: `taksa-registry.local`).
+- `DOCKER_LABEL`: The image tag (default: `dev`).
+
+Modify these in the `VERSION` file to change the tagging strategy across the entire project.
