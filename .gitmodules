@@ -20,7 +20,3 @@
 	path = repos/taksa-platform
 	url = git@github.com:artpark-hub/taksa-platform-services.git
 	branch = release/0.0.x
-[submodule "taksa-ui"]
-	path = repos/taksa-ui
-	url = git@github.com:artpark-hub/taksa-ui.git
-	branch = release/0.0.x
