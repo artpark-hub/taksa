@@ -74,8 +74,8 @@ build-ui: ## Build taksa-ui
 build-traceability: ## Build taksa-app-traceability
 	@$(MAKE) -C $(REPOS_DIR)/taksa-app-traceability build
 
-build-services: ## Build taksa-platform-services
-	@$(MAKE) -C $(REPOS_DIR)/taksa-platform-services build
+build-platform: ## Build taksa-platform
+	@$(MAKE) -C $(REPOS_DIR)/taksa-platform build
 
 build-edge: ## Build taksa-edge-umh
 	@$(MAKE) -C $(REPOS_DIR)/taksa-edge-umh build

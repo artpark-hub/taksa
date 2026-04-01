@@ -16,8 +16,8 @@
 	path = repos/taksa-platform-dm
 	url = git@github.com:artpark-hub/taksa-platform-dm.git
 	branch = release/0.0.x
-[submodule "taksa-platform-services"]
-	path = repos/taksa-platform-services
+[submodule "taksa-platform"]
+	path = repos/taksa-platform
 	url = git@github.com:artpark-hub/taksa-platform-services.git
 	branch = release/0.0.x
 [submodule "taksa-ui"]

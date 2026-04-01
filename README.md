@@ -29,7 +29,7 @@ This is the meta-repository for the Taksa project, managing all related services
 | [taksa-deployments](repos/taksa-deployments) | `repos/taksa-deployments` | Deployment scripts for Platform and Edge. |
 | [taksa-edge-umh](repos/taksa-edge-umh) | `repos/taksa-edge-umh` | UMH edge solution for factory data ingestion. |
 | [taksa-platform-dm](repos/taksa-platform-dm) | `repos/taksa-platform-dm` | Platform Device Management service. |
-| [taksa-platform-services](repos/taksa-platform-services) | `repos/taksa-platform-services` | Core platform services. |
+| [taksa-platform](repos/taksa-platform) | `repos/taksa-platform` | Core platform services. |
 | [taksa-ui](repos/taksa-ui) | `repos/taksa-ui` | User Interface and dashboard. |
 
 ## Prerequisites
