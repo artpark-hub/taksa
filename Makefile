@@ -31,8 +31,22 @@ help: ## Show this help message
 init-repo: ## Initialize and update all submodules
 	@echo "Initializing and updating submodules for branch $(BRANCH)..."
 	git submodule update --init --recursive
-	git submodule foreach 'git checkout $(BRANCH) || git checkout -b $(BRANCH) origin/$(BRANCH) || echo "Failed to checkout $(BRANCH) in $$name"'
-	git submodule foreach 'git pull origin $(BRANCH)'
+
+	git submodule foreach '\
+               if git ls-remote --exit-code --heads origin $(BRANCH) > /dev/null 2>&1; then \
+                       echo "Checking out $(BRANCH) in $$name"; \
+                       git checkout $(BRANCH) || git checkout -b $(BRANCH) origin/$(BRANCH); \
+                       git pull origin $(BRANCH); \
+               else \
+                       DEFAULT_BRANCH=$$(git remote show origin | grep "HEAD branch" | sed "s/.*: //" | xargs); \
+                       if [ -z "$$DEFAULT_BRANCH" ]; then \
+                               echo "Error: Could not determine default branch for $$name. Please ensure origin remote is correctly configured."; \
+                               exit 1; \
+                       fi; \
+                       echo "Branch $(BRANCH) not found in $$name, falling back to $$DEFAULT_BRANCH"; \
+                       git checkout $$DEFAULT_BRANCH; \
+                       git pull origin $$DEFAULT_BRANCH; \
+               fi'
 
 setup: ## Create dev setup with GOPATH/GOROOT in $(BUILD_DIR)
 	@echo "Setting up dev environment in $(BUILD_DIR)..."
