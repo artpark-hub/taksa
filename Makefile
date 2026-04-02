@@ -6,8 +6,9 @@ export DOCKER_LABEL := $(shell grep DOCKER_LABEL $(VERSION_FILE) | cut -d'=' -f2
 export DOCKER_REGISTRY := $(shell grep DOCKER_REGISTRY $(VERSION_FILE) | cut -d'=' -f2)
 
 REPOS_DIR := repos
-BUILD_DIR := $(CURDIR)/build
-GO_VERSION := 1.24.0
+DEPLOY_DIR := $(REPOS_DIR)/taksa-deployments/platform/docker-compose
+BUILD_DIR := $(CURDIR)/_build
+GO_VERSION := 1.26.1
 GO_TARBALL := go$(GO_VERSION).linux-amd64.tar.gz
 GO_URL := https://go.dev/dl/$(GO_TARBALL)
 
@@ -19,16 +20,16 @@ export PATH := $(GOROOT)/bin:$(GOPATH)/bin:$(PATH)
 
 .DEFAULT_GOAL := help
 
-.PHONY: all help init-repo setup build clean \
-	build-ui build-traceability build-services build-edge build-dm build-benthos \
-	platform-init platform-up platform-down
+.PHONY: all help repo-sync init clean \
+	build-all build-traceability build-platform build-edge build-benthos \
+	platform-init platform-up platform-down platform-logs
 
-all: build
+all: build-all
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-init-repo: ## Initialize and update all submodules
+repo-sync: ## Initialize and update all submodules
 	@echo "Initializing and updating submodules for branch $(BRANCH)..."
 	git submodule update --init --recursive
 
@@ -48,48 +49,48 @@ init-repo: ## Initialize and update all submodules
                        git pull origin $$DEFAULT_BRANCH; \
                fi'
 
-setup: ## Create dev setup with GOPATH/GOROOT in $(BUILD_DIR)
+init: ## Setup Go toolchain and run make init in all submodules
 	@echo "Setting up dev environment in $(BUILD_DIR)..."
 	@mkdir -p $(BUILD_DIR)/gopath/bin
-	@if [ ! -d "$(BUILD_DIR)/go/bin" ]; then \
-		echo "Downloading Go $(GO_VERSION)..."; \
+	@INSTALLED_VER=$$($(BUILD_DIR)/go/bin/go env GOVERSION 2>/dev/null | sed 's/^go//'); \
+	if [ "$$INSTALLED_VER" != "$(GO_VERSION)" ]; then \
+		echo "Downloading Go $(GO_VERSION) (found: $${INSTALLED_VER:-none})..."; \
+		rm -rf $(BUILD_DIR)/go; \
 		curl -L $(GO_URL) -o $(BUILD_DIR)/$(GO_TARBALL); \
 		tar -C $(BUILD_DIR) -xzf $(BUILD_DIR)/$(GO_TARBALL); \
 		rm $(BUILD_DIR)/$(GO_TARBALL); \
 	fi
-	@echo "Dev setup complete."
-
-build-all: ## Build all repositories to create docker images
-	@echo "Building all repositories..."
+	@echo "Go toolchain ready ($(GO_VERSION))."
+	@echo "Running init in submodules..."
 	@for repo in $(REPOS_DIR)/*; do \
-		if [ -f $$repo/Makefile ]; then \
-			echo "Building $$repo..."; \
-			$(MAKE) -C $$repo build || exit 1; \
+		if [ -f $$repo/Makefile ] && $(MAKE) -n -C $$repo init >/dev/null 2>&1; then \
+			echo "Initializing $$repo..."; \
+			$(MAKE) -C $$repo init || exit 1; \
 		fi \
 	done
+	@echo "Init complete."
 
-build-ui: ## Build taksa-ui
-	@$(MAKE) -C $(REPOS_DIR)/taksa-ui build
+build-all: build-platform build-traceability build-benthos build-edge ## Build all Docker images
+	@echo "All images built successfully."
 
-build-traceability: ## Build taksa-app-traceability
-	@$(MAKE) -C $(REPOS_DIR)/taksa-app-traceability build
-
-build-platform: ## Build taksa-platform
+build-platform: ## Build all taksa-platform services (dm, user, ui)
 	@$(MAKE) -C $(REPOS_DIR)/taksa-platform build
 
-build-edge: ## Build taksa-edge-umh
+build-traceability: ## Build taksa-app-traceability Docker image
+	@echo "Building taksa-app-traceability..."
+	docker build -t $(DOCKER_REGISTRY)/taksa-app-traceability:$(DOCKER_LABEL) $(REPOS_DIR)/taksa-app-traceability/
+
+build-edge: ## Build taksa-edge-umh Docker image
 	@$(MAKE) -C $(REPOS_DIR)/taksa-edge-umh build
 
-build-dm: ## Build taksa-platform-dm
-	@$(MAKE) -C $(REPOS_DIR)/taksa-platform-dm build
-
-build-benthos: ## Build taksa-benthos-umh
-	@$(MAKE) -C $(REPOS_DIR)/taksa-benthos-umh build
+build-benthos: ## Build taksa-benthos-umh Docker image
+	@echo "Building taksa-benthos-umh..."
+	docker build -t $(DOCKER_REGISTRY)/taksa-benthos-umh:$(DOCKER_LABEL) $(REPOS_DIR)/taksa-benthos-umh/
 
 platform-init: ## Initialize platform (certs, env, etc.)
 	@echo "Initializing platform..."
-	@if [ -d "$(REPOS_DIR)/taksa-deployments/platform/docker-compose" ]; then \
-		$(MAKE) -C $(REPOS_DIR)/taksa-deployments/platform/docker-compose init; \
+	@if [ -d "$(DEPLOY_DIR)" ]; then \
+		$(MAKE) -C $(DEPLOY_DIR) init; \
 	else \
 		echo "Error: Platform deployment directory not found. Did you run 'make init-repo'?"; \
 		exit 1; \
@@ -97,8 +98,8 @@ platform-init: ## Initialize platform (certs, env, etc.)
 
 platform-up: ## Bring up the platform
 	@echo "Bringing up platform..."
-	@if [ -d "$(REPOS_DIR)/taksa-deployments/platform/docker-compose" ]; then \
-		$(MAKE) -C $(REPOS_DIR)/taksa-deployments/platform/docker-compose up; \
+	@if [ -d "$(DEPLOY_DIR)" ]; then \
+		$(MAKE) -C $(DEPLOY_DIR) up; \
 	else \
 		echo "Error: Platform deployment directory not found."; \
 		exit 1; \
@@ -106,12 +107,26 @@ platform-up: ## Bring up the platform
 
 platform-down: ## Bring down the platform
 	@echo "Bringing down platform..."
-	@if [ -d "$(REPOS_DIR)/taksa-deployments/platform/docker-compose" ]; then \
-		$(MAKE) -C $(REPOS_DIR)/taksa-deployments/platform/docker-compose down; \
+	@if [ -d "$(DEPLOY_DIR)" ]; then \
+		$(MAKE) -C $(DEPLOY_DIR) down; \
 	else \
 		echo "Error: Platform deployment directory not found."; \
 		exit 1; \
 	fi
+
+platform-logs: ## Follow platform container logs
+	@if [ -d "$(DEPLOY_DIR)" ]; then \
+		$(MAKE) -C $(DEPLOY_DIR) logs; \
+	else \
+		echo "Error: Platform deployment directory not found."; \
+		exit 1; \
+	fi
+
+shellcmd: ## Run a command in the build environment (e.g., make shellcmd go version)
+	@$(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+
+%:
+	@:
 
 clean: ## Clean up build artifacts (prune dangling Docker images and volumes)
 	@echo "This will prune unused (dangling) Docker images and volumes."

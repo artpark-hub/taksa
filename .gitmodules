@@ -14,5 +14,5 @@
 	url = git@github.com:artpark-hub/taksa-edge-umh.git
 [submodule "taksa-platform"]
 	path = repos/taksa-platform
-	url = git@github.com:artpark-hub/taksa-platform-services.git
+	url = git@github.com:artpark-hub/taksa-platform.git
 	branch = release/0.0.x
