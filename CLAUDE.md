@@ -9,10 +9,10 @@ Taksa Factory OS is an open-source manufacturing IoT platform. This is the **met
 ## Build Commands
 
 ```bash
-make init-repo          # Initialize/update all submodules (checks out branch from VERSION file)
-make setup              # Download isolated Go 1.24.0 toolchain to build/
+make repo-sync          # Initialize/update all submodules (checks out branch from VERSION file)
+make init               # Download isolated Go toolchain to _build/ (version defined in Makefile)
 make build-all          # Build all services (Docker images)
-make build-<service>    # Build one: build-ui, build-traceability, build-platform, build-edge, build-dm, build-benthos
+make build-<service>    # Build one: build-traceability, build-platform, build-edge, build-benthos
 make shellcmd <cmd>     # Run a command using the local Go toolchain (e.g., make shellcmd go version)
 make platform-init      # Generate SSL certs and data dirs for local deployment
 make platform-up        # Start full Docker Compose stack
@@ -27,8 +27,8 @@ Individual submodules have their own Makefiles with targets like `build`, `api` 
 ### Meta-repo Orchestration
 
 - `VERSION` controls branch (`BRANCH`), version (`VERSION`), Docker registry (`DOCKER_REGISTRY`), and image tag (`DOCKER_LABEL`) for the entire project.
-- `Makefile` exports `GOROOT`, `GOPATH`, `PATH`, `DOCKER_REGISTRY`, and `DOCKER_LABEL` to all child builds. The Go toolchain is fully isolated in `build/` — no system Go required.
-- `init-repo` checks out `BRANCH` in each submodule that has it, falls back to the submodule's default branch otherwise.
+- `Makefile` exports `GOROOT`, `GOPATH`, `PATH`, `DOCKER_REGISTRY`, and `DOCKER_LABEL` to all child builds. The Go toolchain is fully isolated in `_build/` — no system Go required.
+- `repo-sync` checks out `BRANCH` in each submodule that has it, falls back to the submodule's default branch otherwise.
 
 ### Submodules (`repos/`)
 

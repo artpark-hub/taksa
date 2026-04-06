@@ -92,7 +92,7 @@ platform-init: ## Initialize platform (certs, env, etc.)
 	@if [ -d "$(DEPLOY_DIR)" ]; then \
 		$(MAKE) -C $(DEPLOY_DIR) init; \
 	else \
-		echo "Error: Platform deployment directory not found. Did you run 'make init-repo'?"; \
+		echo "Error: Platform deployment directory not found. Did you run 'make repo-sync'?"; \
 		exit 1; \
 	fi
 
