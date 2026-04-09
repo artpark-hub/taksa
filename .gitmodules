@@ -12,15 +12,7 @@
 [submodule "taksa-edge-umh"]
 	path = repos/taksa-edge-umh
 	url = git@github.com:artpark-hub/taksa-edge-umh.git
-[submodule "taksa-platform-dm"]
-	path = repos/taksa-platform-dm
-	url = git@github.com:artpark-hub/taksa-platform-dm.git
-	branch = release/0.0.x
-[submodule "taksa-platform-services"]
-	path = repos/taksa-platform-services
-	url = git@github.com:artpark-hub/taksa-platform-services.git
-	branch = release/0.0.x
-[submodule "taksa-ui"]
-	path = repos/taksa-ui
-	url = git@github.com:artpark-hub/taksa-ui.git
+[submodule "taksa-platform"]
+	path = repos/taksa-platform
+	url = git@github.com:artpark-hub/taksa-platform.git
 	branch = release/0.0.x
