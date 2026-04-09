@@ -1,4 +1,4 @@
-BRANCH=pronoy/build-workflow
+BRANCH=release/0.0.x
 VERSION=0.0.1
 DOCKER_LABEL=dev
 DOCKER_REGISTRY=registry.taksa.org
