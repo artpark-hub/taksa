@@ -5,6 +5,7 @@
 [submodule "taksa-benthos-umh"]
 	path = repos/taksa-benthos-umh
 	url = git@github.com:artpark-hub/taksa-benthos-umh.git
+	branch = release/0.0.x
 [submodule "taksa-deployments"]
 	path = repos/taksa-deployments
 	url = git@github.com:artpark-hub/taksa-deployments.git
@@ -12,6 +13,7 @@
 [submodule "taksa-edge-umh"]
 	path = repos/taksa-edge-umh
 	url = git@github.com:artpark-hub/taksa-edge-umh.git
+	branch = release/0.0.x
 [submodule "taksa-platform"]
 	path = repos/taksa-platform
 	url = git@github.com:artpark-hub/taksa-platform.git

@@ -14,9 +14,8 @@ This is the meta-repository for the Taksa project, managing all related services
 ## Project Structure
 
 - `repos/`: Contains all Taksa submodules.
-- `build/`: Local, isolated Go toolchain and build artifacts (generated via `make setup`).
+- `_build/`: Local, isolated Go toolchain and build artifacts (generated via `make init`).
 - `scripts/`: Build and utility scripts.
-- `services/`: Core service definitions and shared logic.
 - `Makefile`: Centralized orchestration for the entire stack.
 - `VERSION`: Defines the target branch, version, and Docker registry/label for all components.
 
@@ -28,9 +27,7 @@ This is the meta-repository for the Taksa project, managing all related services
 | [taksa-benthos-umh](repos/taksa-benthos-umh) | `repos/taksa-benthos-umh` | Benthos(redpanda connect) based data transformation edge layer. |
 | [taksa-deployments](repos/taksa-deployments) | `repos/taksa-deployments` | Deployment scripts for Platform and Edge. |
 | [taksa-edge-umh](repos/taksa-edge-umh) | `repos/taksa-edge-umh` | UMH edge solution for factory data ingestion. |
-| [taksa-platform-dm](repos/taksa-platform-dm) | `repos/taksa-platform-dm` | Platform Device Management service. |
-| [taksa-platform](repos/taksa-platform) | `repos/taksa-platform` | Core platform services. |
-| [taksa-ui](repos/taksa-ui) | `repos/taksa-ui` | User Interface and dashboard. |
+| [taksa-platform](repos/taksa-platform) | `repos/taksa-platform` | Core platform monorepo (user-management, device-management, ui-service). |
 
 ## Prerequisites
 
@@ -49,22 +46,22 @@ git clone git@github.com:artpark-hub/taksa.git
 cd taksa
 ```
 
-### 2. Initialize Submodules & Hooks
+### 2. Initialize & Sync Submodules
 
-This command initializes all submodules, configures local Git settings (to prevent unpushed submodule commits), and installs `lefthook` for pre-push validation.
+This command initializes and updates all submodules to the branch specified in the `VERSION` file.
 
 ```bash
-make init-repo
+make repo-sync
 ```
 
 ### 3. Setup Development Environment
 
-Download a local Go toolchain and configure the build environment (isolated to the `build/` directory):
+Download a local Go toolchain and configure the build environment (isolated to the `_build/` directory):
 
 ```bash
-make setup
+make init
 ```
-The environment variables (`GOROOT`, `GOPATH`, `PATH`) are now handled directly within the `Makefile`, eliminating the need to source external `.env` files.
+The environment variables (`GOROOT`, `GOPATH`, `PATH`) are handled directly within the `Makefile`, ensuring an isolated build environment.
 
 ### 4. Build the Stack
 
@@ -73,22 +70,18 @@ The environment variables (`GOROOT`, `GOPATH`, `PATH`) are now handled directly 
 make build-all
 ```
 
-**Build Individual Submodules:**
-You can build specific parts of the stack to save time:
-- `make build-ui`
-- `make build-traceability`
-- `make build-services`
-- `make build-edge`
-- `make build-dm`
-- `make build-benthos`
+**Build Individual Components:**
+- `make build-platform`: Build core platform services (DM, User, UI).
+- `make build-traceability`: Build MES traceability service.
+- `make build-edge`: Build edge IoT gateway.
+- `make build-benthos`: Build stream processing layer.
 
 ### 5. Running Commands in Build Environment
 
-Use the `shellcmd` target to run arbitrary commands (like `go install` or `go version`) using the internal Taksa toolchain instead of your system's global environment:
+Use the `shellcmd` target to run arbitrary commands (like `go version`) using the internal Taksa toolchain:
 
 ```bash
 make shellcmd go version
-make shellcmd go install github.com/some/tool@latest
 ```
 
 ### 6. Deploy the Platform
@@ -108,13 +101,15 @@ make platform-up
 ## Management Targets
 
 - `make platform-down`: Stop and remove the platform stack.
+- `make platform-logs`: Follow platform container logs.
 - `make clean`: Prune unused Docker images and volumes.
 - `make help`: List all available targets with descriptions.
 
 ## Versioning & Docker Registry
 
 All Docker images are tagged using values defined in the `VERSION` file:
-- `DOCKER_REGISTRY`: The destination registry (default: `taksa-registry.local`).
+- `BRANCH`: The target branch for submodules (e.g., `release/0.0.x`).
+- `DOCKER_REGISTRY`: The destination registry (default: `registry.taksa.org`).
 - `DOCKER_LABEL`: The image tag (default: `dev`).
 
-Modify these in the `VERSION` file to change the tagging strategy across the entire project.
+Modify these in the `VERSION` file to change the strategy across the entire project.
