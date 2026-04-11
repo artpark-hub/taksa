@@ -9,9 +9,10 @@ export REPOS_DIR := repos
 export DEPLOY_DIR := $(REPOS_DIR)/taksa-deployments/platform/docker-compose
 export BUILD_DIR := $(CURDIR)/_build
 export GO_VERSION := 1.26.1
-GO_TARBALL := go$(GO_VERSION).linux-amd64.tar.gz
-GO_URL := https://go.dev/dl/$(GO_TARBALL)
 export GOOS := linux
+export GOARCH := amd64
+GO_TARBALL := go$(GO_VERSION).$(GOOS)-$(GOARCH).tar.gz
+GO_URL := https://go.dev/dl/$(GO_TARBALL)
 
 # Build environment variables
 export GOROOT := $(BUILD_DIR)/go
