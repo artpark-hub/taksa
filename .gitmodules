@@ -18,3 +18,7 @@
 	path = repos/taksa-platform
 	url = git@github.com:artpark-hub/taksa-platform.git
 	branch = release/0.0.x
+[submodule "repos/taksa-app-alerts"]
+	path = repos/taksa-app-alerts
+	url = git@github.com:artpark-hub/taksa-app-alerts.git
+	branch = release/0.0.x

@@ -5,11 +5,13 @@ VERSION := $(shell grep VERSION $(VERSION_FILE) | cut -d'=' -f2)
 export DOCKER_LABEL := $(shell grep DOCKER_LABEL $(VERSION_FILE) | cut -d'=' -f2)
 export DOCKER_REGISTRY := $(shell grep DOCKER_REGISTRY $(VERSION_FILE) | cut -d'=' -f2)
 
-REPOS_DIR := repos
-DEPLOY_DIR := $(REPOS_DIR)/taksa-deployments/platform/docker-compose
-BUILD_DIR := $(CURDIR)/_build
-GO_VERSION := 1.26.1
-GO_TARBALL := go$(GO_VERSION).linux-amd64.tar.gz
+export REPOS_DIR := repos
+export DEPLOY_DIR := $(REPOS_DIR)/taksa-deployments/platform/docker-compose
+export BUILD_DIR := $(CURDIR)/_build
+export GO_VERSION := 1.26.1
+export GOOS := linux
+export GOARCH := amd64
+GO_TARBALL := go$(GO_VERSION).$(GOOS)-$(GOARCH).tar.gz
 GO_URL := https://go.dev/dl/$(GO_TARBALL)
 
 # Build environment variables
@@ -78,6 +80,7 @@ build-platform: ## Build all taksa-platform services (dm, user, ui)
 
 build-traceability: ## Build taksa-app-traceability Docker image
 	@echo "Building taksa-app-traceability..."
+	@$(MAKE) -C $(REPOS_DIR)/taksa-app-traceability build
 	docker build -t $(DOCKER_REGISTRY)/taksa-app-traceability:$(DOCKER_LABEL) $(REPOS_DIR)/taksa-app-traceability/
 
 build-edge: ## Build taksa-edge-umh Docker image
