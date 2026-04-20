@@ -4,6 +4,7 @@ BRANCH := $(shell grep BRANCH $(VERSION_FILE) | cut -d'=' -f2)
 VERSION := $(shell grep VERSION $(VERSION_FILE) | cut -d'=' -f2)
 export DOCKER_LABEL := $(shell grep DOCKER_LABEL $(VERSION_FILE) | cut -d'=' -f2)
 export DOCKER_REGISTRY := $(shell grep DOCKER_REGISTRY $(VERSION_FILE) | cut -d'=' -f2)
+PUBLISH_TAG := $(DOCKER_LABEL)-$(shell id -un)
 
 export REPOS_DIR := repos
 export DEPLOY_DIR := $(REPOS_DIR)/taksa-deployments/platform/docker-compose
@@ -24,7 +25,8 @@ export PATH := $(GOROOT)/bin:$(GOPATH)/bin:$(PATH)
 
 .PHONY: all help repo-sync init clean \
 	build-all build-traceability build-platform build-edge build-benthos \
-	platform-init platform-up platform-down platform-logs
+	platform-init platform-up platform-down platform-logs \
+	publish publish-platform publish-traceability publish-benthos publish-edge
 
 all: build-all
 
@@ -33,6 +35,7 @@ help: ## Show this help message
 
 repo-sync: ## Initialize and update all submodules
 	@echo "Initializing and updating submodules for branch $(BRANCH)..."
+	git submodule sync --recursive
 	git submodule update --init --recursive
 
 	git submodule foreach '\
@@ -130,6 +133,60 @@ shellcmd: ## Run a command in the build environment (e.g., make shellcmd go vers
 
 %:
 	@:
+
+# ---------------------------------------------------------------------------
+# Publish targets — tag built images with <DOCKER_LABEL>-<username> and push
+# PUBLISH_TAG = $(DOCKER_LABEL)-$(shell id -un)  e.g. dev-chetansk
+# ---------------------------------------------------------------------------
+
+publish: publish-platform publish-traceability publish-benthos publish-edge ## Publish all Docker images to $(DOCKER_REGISTRY) with tag $(PUBLISH_TAG)
+	@echo "All images published to $(DOCKER_REGISTRY) with tag $(PUBLISH_TAG)."
+
+publish-platform: ## Publish taksa-platform images (dm, user, ui) to registry
+	@echo "Publishing taksa-platform images with tag $(PUBLISH_TAG)..."
+	@set -e; \
+	for img in taksa-device-management taksa-user-management taksa-ui-service; do \
+		SRC=$(DOCKER_REGISTRY)/$$img:$(DOCKER_LABEL); \
+		DST=$(DOCKER_REGISTRY)/$$img:$(PUBLISH_TAG); \
+		echo "  Tagging $$SRC -> $$DST" && \
+		docker tag $$SRC $$DST && \
+		echo "  Pushing $$DST" && \
+		docker push $$DST; \
+	done
+
+publish-traceability: ## Publish taksa-app-traceability image to registry
+	@echo "Publishing taksa-app-traceability with tag $(PUBLISH_TAG)..."
+	@SRC=$(DOCKER_REGISTRY)/taksa-app-traceability:$(DOCKER_LABEL); \
+	DST=$(DOCKER_REGISTRY)/taksa-app-traceability:$(PUBLISH_TAG); \
+	echo "  Tagging $$SRC -> $$DST"; \
+	docker tag $$SRC $$DST; \
+	echo "  Pushing $$DST"; \
+	docker push $$DST
+
+publish-benthos: ## Publish taksa-benthos-umh image to registry
+	@echo "Publishing taksa-benthos-umh with tag $(PUBLISH_TAG)..."
+	@SRC=$(DOCKER_REGISTRY)/taksa-benthos-umh:$(DOCKER_LABEL); \
+	DST=$(DOCKER_REGISTRY)/taksa-benthos-umh:$(PUBLISH_TAG); \
+	echo "  Tagging $$SRC -> $$DST"; \
+	docker tag $$SRC $$DST; \
+	echo "  Pushing $$DST"; \
+	docker push $$DST
+
+publish-edge: ## Publish taksa-edge-umh image to registry
+	@echo "Publishing taksa-edge-umh with tag $(PUBLISH_TAG)..."
+	@for repo in $(REPOS_DIR)/taksa-edge-umh; do \
+		if [ -f $$repo/Makefile ] && $(MAKE) -n -C $$repo publish > /dev/null 2>&1; then \
+			DOCKER_LABEL=$(DOCKER_LABEL) DOCKER_REGISTRY=$(DOCKER_REGISTRY) PUBLISH_TAG=$(PUBLISH_TAG) \
+			$(MAKE) -C $$repo publish; \
+		else \
+			SRC=$(DOCKER_REGISTRY)/taksa-edge-umh:$(DOCKER_LABEL); \
+			DST=$(DOCKER_REGISTRY)/taksa-edge-umh:$(PUBLISH_TAG); \
+			echo "  Tagging $$SRC -> $$DST"; \
+			docker tag $$SRC $$DST; \
+			echo "  Pushing $$DST"; \
+			docker push $$DST; \
+		fi \
+	done
 
 clean: ## Clean up build artifacts (prune dangling Docker images and volumes)
 	@echo "This will prune unused (dangling) Docker images and volumes."
