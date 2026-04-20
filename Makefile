@@ -132,7 +132,7 @@ shellcmd: ## Run a command in the build environment (e.g., make shellcmd go vers
 
 # ---------------------------------------------------------------------------
 # Publish targets — tag built images with <DOCKER_LABEL>-<username> and push
-# PUBLISH_TAG = $(DOCKER_LABEL)-$(id -un)  e.g. dev-chetansk
+# PUBLISH_TAG = $(DOCKER_LABEL)-$(shell id -un)  e.g. dev-chetansk
 # ---------------------------------------------------------------------------
 
 publish: publish-platform publish-traceability publish-benthos publish-edge ## Publish all Docker images to $(DOCKER_REGISTRY) with tag $(PUBLISH_TAG)
