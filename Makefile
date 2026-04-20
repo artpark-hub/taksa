@@ -33,6 +33,7 @@ help: ## Show this help message
 
 repo-sync: ## Initialize and update all submodules
 	@echo "Initializing and updating submodules for branch $(BRANCH)..."
+	git submodule sync --recursive
 	git submodule update --init --recursive
 
 	git submodule foreach '\
