@@ -141,12 +141,13 @@ publish: publish-platform publish-traceability publish-benthos publish-edge ## P
 
 publish-platform: ## Publish taksa-platform images (dm, user, ui) to registry
 	@echo "Publishing taksa-platform images with tag $(PUBLISH_TAG)..."
-	@for img in taksa-device-management taksa-user-management taksa-ui-service; do \
+	@set -e; \
+	for img in taksa-device-management taksa-user-management taksa-ui-service; do \
 		SRC=$(DOCKER_REGISTRY)/$$img:$(DOCKER_LABEL); \
 		DST=$(DOCKER_REGISTRY)/$$img:$(PUBLISH_TAG); \
-		echo "  Tagging $$SRC -> $$DST"; \
-		docker tag $$SRC $$DST; \
-		echo "  Pushing $$DST"; \
+		echo "  Tagging $$SRC -> $$DST" && \
+		docker tag $$SRC $$DST && \
+		echo "  Pushing $$DST" && \
 		docker push $$DST; \
 	done
 
